@@ -98,6 +98,7 @@ namespace DatabaseExampleWPF
                     return;
                 }
 
+
                 // Get books for this author from the BookAuthors junction table
                 // This uses a JOIN query: Books JOIN BookAuthors ON BookID WHERE AuthorID = X
                 List<Book> books = DatabaseHelper.GetBooksForAuthor(selectedAuthor.AuthorID);
