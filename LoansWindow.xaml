@@ -1,0 +1,325 @@
+﻿<Window x:Class="DatabaseExampleWPF.LoansWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Manage Loans" 
+        Height="650" 
+        Width="950"
+        WindowStartupLocation="CenterScreen">
+
+    <!-- 
+    This window demonstrates CRUD operations for the Loans table
+    Shows working with foreign keys, dates, and one-to-many relationships
+    Demonstrates using ComboBoxes to select related entities
+    -->
+
+    <Window.Resources>
+        <!-- Button style -->
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <!-- TextBlock style -->
+        <Style TargetType="TextBlock">
+            <Setter Property="Margin" Value="5,5,5,2"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+
+        <!-- TextBox style -->
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="Margin" Value="5,2,5,5"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+
+        <!-- ComboBox style -->
+        <Style TargetType="ComboBox">
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="Margin" Value="5,2,5,5"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+
+        <!-- DatePicker style -->
+        <Style TargetType="DatePicker">
+            <Setter Property="Margin" Value="5,2,5,5"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+    </Window.Resources>
+
+    <!-- 
+    Main Grid with two columns:
+    - Left: DataGrid showing all loans
+    - Right: Form for add/edit operations
+    -->
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <!-- Left column: proportional space -->
+            <ColumnDefinition Width="380"/>
+            <!-- Right column: fixed width for form -->
+        </Grid.ColumnDefinitions>
+
+        <!-- LEFT SIDE: Loans List -->
+        <Grid Grid.Column="0" Margin="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <!-- Header -->
+                <RowDefinition Height="*"/>
+                <!-- DataGrid -->
+                <RowDefinition Height="Auto"/>
+                <!-- Action buttons -->
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <TextBlock Grid.Row="0" 
+                       Text="Loans List" 
+                       FontSize="18" 
+                       FontWeight="Bold"
+                       Margin="5,5,5,10"/>
+
+            <!-- 
+            DataGrid for displaying loans
+            Note: This shows basic loan data without joins
+            For joined data display, see SearchLoansWindow
+            -->
+            <DataGrid Grid.Row="1"
+                      x:Name="dgLoans"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      SelectionMode="Single"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      GridLinesVisibility="Horizontal"
+                      AlternatingRowBackground="#F5F5F5"
+                      SelectionChanged="DgLoans_SelectionChanged"
+                      Margin="5">
+
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Loan ID" 
+                                        Binding="{Binding LoanID}" 
+                                        Width="70"/>
+
+                    <DataGridTextColumn Header="Book ID" 
+                                        Binding="{Binding BookID}" 
+                                        Width="70"/>
+
+                    <DataGridTextColumn Header="Member ID" 
+                                        Binding="{Binding MemberID}" 
+                                        Width="85"/>
+
+                    <!-- 
+                    Date formatting in binding
+                    StringFormat formats the date as dd/MM/yyyy
+                    -->
+                    <DataGridTextColumn Header="Loan Date" 
+                                        Binding="{Binding LoanDate, StringFormat='dd/MM/yyyy'}" 
+                                        Width="90"/>
+
+                    <DataGridTextColumn Header="Due Date" 
+                                        Binding="{Binding DueDate, StringFormat='dd/MM/yyyy'}" 
+                                        Width="90"/>
+
+                    <DataGridTextColumn Header="Return Date" 
+                                        Binding="{Binding ReturnDate, StringFormat='dd/MM/yyyy'}" 
+                                        Width="95"/>
+
+                    <!-- 
+                    Binding to computed property Status
+                    This property is calculated in the Loan class
+                    -->
+                    <DataGridTextColumn Header="Status" 
+                                        Binding="{Binding Status}" 
+                                        Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- Action Buttons -->
+            <StackPanel Grid.Row="2" 
+                        Orientation="Horizontal" 
+                        HorizontalAlignment="Center"
+                        Margin="5">
+
+                <Button x:Name="btnRefresh"
+                        Content="🔄 Refresh List"
+                        Click="BtnRefresh_Click"
+                        Background="#2196F3"
+                        Foreground="White"/>
+
+                <Button x:Name="btnReturnBook"
+                        Content="📥 Return Selected Book"
+                        Click="BtnReturnBook_Click"
+                        Background="#4CAF50"
+                        Foreground="White"/>
+
+                <Button x:Name="btnDelete"
+                        Content="🗑️ Delete Selected Loan"
+                        Click="BtnDelete_Click"
+                        Background="#F44336"
+                        Foreground="White"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- RIGHT SIDE: Add/Edit Form -->
+        <Grid Grid.Column="1" 
+              Margin="10"
+              Background="#F9F9F9">
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <!-- Form header -->
+                <RowDefinition Height="*"/>
+                <!-- Loan form -->
+            </Grid.RowDefinitions>
+
+            <!-- Form Header -->
+            <Border Grid.Row="0" 
+                    Background="#2196F3" 
+                    Padding="10"
+                    Margin="0,0,0,10">
+                <TextBlock x:Name="txtFormTitle"
+                           Text="Add New Loan" 
+                           FontSize="16" 
+                           FontWeight="Bold"
+                           Foreground="White"
+                           Margin="0"/>
+            </Border>
+
+            <!-- Loan Entry Form -->
+            <Border Grid.Row="1" 
+                    Background="White" 
+                    Padding="10"
+                    BorderBrush="#DDDDDD"
+                    BorderThickness="1">
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- 
+                        Book Selection
+                        ComboBox populated with available books
+                        DisplayMemberPath shows the Title
+                        SelectedValuePath uses BookID as the value
+                        -->
+                        <TextBlock Text="Select Book *"/>
+                        <ComboBox x:Name="cboBook"
+                                  DisplayMemberPath="Title"
+                                  SelectedValuePath="BookID"/>
+
+                        <!-- Help text for book selection -->
+                        <TextBlock Text="Shows all books in the database"
+                                   FontSize="10"
+                                   FontStyle="Italic"
+                                   Foreground="Gray"
+                                   Margin="5,0,5,10"/>
+
+                        <!-- 
+                        Member Selection
+                        ComboBox populated with available members
+                        DisplayMemberPath shows FullName (computed property)
+                        SelectedValuePath uses MemberID as the value
+                        -->
+                        <TextBlock Text="Select Member *"/>
+                        <ComboBox x:Name="cboMember"
+                                  DisplayMemberPath="FullName"
+                                  SelectedValuePath="MemberID"/>
+
+                        <TextBlock Text="Shows all library members"
+                                   FontSize="10"
+                                   FontStyle="Italic"
+                                   Foreground="Gray"
+                                   Margin="5,0,5,10"/>
+
+                        <!-- 
+                        Loan Date
+                        DatePicker: WPF control for selecting dates
+                        Much better than TextBox for date entry
+                        -->
+                        <TextBlock Text="Loan Date *"/>
+                        <DatePicker x:Name="dpLoanDate"/>
+
+                        <TextBlock Text="Date the book was borrowed"
+                                   FontSize="10"
+                                   FontStyle="Italic"
+                                   Foreground="Gray"
+                                   Margin="5,0,5,10"/>
+
+                        <!-- Due Date -->
+                        <TextBlock Text="Due Date *"/>
+                        <DatePicker x:Name="dpDueDate"/>
+
+                        <TextBlock Text="Date the book should be returned"
+                                   FontSize="10"
+                                   FontStyle="Italic"
+                                   Foreground="Gray"
+                                   Margin="5,0,5,10"/>
+
+                        <!-- 
+                        Return Date
+                        Optional field - only set when book is returned
+                        CheckBox controls whether the DatePicker is enabled
+                        -->
+                        <CheckBox x:Name="chkReturnDate"
+                                  Content="Book has been returned"
+                                  Margin="5"
+                                  Checked="ChkReturnDate_Checked"
+                                  Unchecked="ChkReturnDate_Unchecked"/>
+
+                        <TextBlock Text="Return Date"/>
+                        <DatePicker x:Name="dpReturnDate"
+                                    IsEnabled="False"/>
+                        <!-- IsEnabled="False": Disabled until checkbox is checked -->
+
+                        <TextBlock Text="Leave unchecked if book not yet returned"
+                                   FontSize="10"
+                                   FontStyle="Italic"
+                                   Foreground="Gray"
+                                   Margin="5,0,5,10"/>
+
+                        <!-- Action Buttons -->
+                        <StackPanel Orientation="Horizontal" 
+                                    HorizontalAlignment="Center"
+                                    Margin="0,15,0,0">
+
+                            <Button x:Name="btnSave"
+                                    Content="💾 Save Loan"
+                                    Click="BtnSave_Click"
+                                    Background="#4CAF50"
+                                    Foreground="White"
+                                    Width="120"/>
+
+                            <Button x:Name="btnClear"
+                                    Content="🔄 Clear Form"
+                                    Click="BtnClear_Click"
+                                    Background="#2196F3"
+                                    Foreground="White"
+                                    Width="120"/>
+                        </StackPanel>
+
+                        <!-- Info text -->
+                        <TextBlock Text="* Required fields"
+                                   FontSize="10"
+                                   FontStyle="Italic"
+                                   Foreground="Gray"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,10,0,0"/>
+
+                        <!-- Additional help text -->
+                        <Border Background="#FFF3CD" 
+                                BorderBrush="#FFC107"
+                                BorderThickness="1"
+                                CornerRadius="5"
+                                Padding="10"
+                                Margin="5,15,5,5">
+                            <TextBlock TextWrapping="Wrap"
+                                       FontSize="11">
+                                <Run Text="💡 Tip: " FontWeight="Bold"/>
+                                <Run Text="To return a book, either check 'Book has been returned' when editing, or use the 'Return Selected Book' button below the loans list."/>
+                            </TextBlock>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

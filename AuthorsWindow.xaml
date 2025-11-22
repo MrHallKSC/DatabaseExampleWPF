@@ -1,0 +1,272 @@
+﻿<Window x:Class="DatabaseExampleWPF.AuthorsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Manage Authors" 
+        Height="600" 
+        Width="800"
+        WindowStartupLocation="CenterScreen">
+
+    <!-- 
+    This window demonstrates CRUD operations for the Authors table
+    Also shows how to query the many-to-many relationship from the Author side
+    (displaying books written by a selected author)
+    -->
+
+    <Window.Resources>
+        <!-- Button style -->
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <!-- TextBlock style -->
+        <Style TargetType="TextBlock">
+            <Setter Property="Margin" Value="5,5,5,2"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+
+        <!-- TextBox style -->
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="Margin" Value="5,2,5,5"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+    </Window.Resources>
+
+    <!-- 
+    Main Grid with two columns:
+    - Left: DataGrid showing all authors
+    - Right: Form for add/edit operations and books display
+    -->
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <!-- Left column: proportional space for DataGrid -->
+            <ColumnDefinition Width="320"/>
+            <!-- Right column: fixed width for form -->
+        </Grid.ColumnDefinitions>
+
+        <!-- LEFT SIDE: Authors List -->
+        <Grid Grid.Column="0" Margin="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <!-- Header -->
+                <RowDefinition Height="*"/>
+                <!-- DataGrid -->
+                <RowDefinition Height="Auto"/>
+                <!-- Action buttons -->
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <TextBlock Grid.Row="0" 
+                       Text="Authors List" 
+                       FontSize="18" 
+                       FontWeight="Bold"
+                       Margin="5,5,5,10"/>
+
+            <!-- DataGrid for displaying authors -->
+            <DataGrid Grid.Row="1"
+                      x:Name="dgAuthors"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      SelectionMode="Single"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      GridLinesVisibility="Horizontal"
+                      AlternatingRowBackground="#F5F5F5"
+                      SelectionChanged="DgAuthors_SelectionChanged"
+                      Margin="5">
+
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ID" 
+                                        Binding="{Binding AuthorID}" 
+                                        Width="50"/>
+
+                    <DataGridTextColumn Header="First Name" 
+                                        Binding="{Binding FirstName}" 
+                                        Width="*"/>
+
+                    <DataGridTextColumn Header="Last Name" 
+                                        Binding="{Binding LastName}" 
+                                        Width="*"/>
+
+                    <!-- 
+                    Binding to FullName computed property
+                    This demonstrates binding to properties that are calculated
+                    rather than stored in the database
+                    -->
+                    <DataGridTextColumn Header="Full Name" 
+                                        Binding="{Binding FullName}" 
+                                        Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- Action Buttons -->
+            <StackPanel Grid.Row="2" 
+                        Orientation="Horizontal" 
+                        HorizontalAlignment="Center"
+                        Margin="5">
+
+                <Button x:Name="btnRefresh"
+                        Content="🔄 Refresh List"
+                        Click="BtnRefresh_Click"
+                        Background="#2196F3"
+                        Foreground="White"/>
+
+                <Button x:Name="btnDelete"
+                        Content="🗑️ Delete Selected Author"
+                        Click="BtnDelete_Click"
+                        Background="#F44336"
+                        Foreground="White"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- RIGHT SIDE: Add/Edit Form and Books Display -->
+        <Grid Grid.Column="1" 
+              Margin="10"
+              Background="#F9F9F9">
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <!-- Form header -->
+                <RowDefinition Height="Auto"/>
+                <!-- Author form -->
+                <RowDefinition Height="*"/>
+                <!-- Books by author display -->
+            </Grid.RowDefinitions>
+
+            <!-- Form Header -->
+            <Border Grid.Row="0" 
+                    Background="#FF9800" 
+                    Padding="10"
+                    Margin="0,0,0,10">
+                <TextBlock x:Name="txtFormTitle"
+                           Text="Add New Author" 
+                           FontSize="16" 
+                           FontWeight="Bold"
+                           Foreground="White"
+                           Margin="0"/>
+            </Border>
+
+            <!-- Author Entry Form -->
+            <Border Grid.Row="1" 
+                    Background="White" 
+                    Padding="10"
+                    Margin="0,0,0,10"
+                    BorderBrush="#DDDDDD"
+                    BorderThickness="1">
+
+                <StackPanel>
+                    <!-- First Name Field -->
+                    <TextBlock Text="First Name *"/>
+                    <TextBox x:Name="txtFirstName"
+                             MaxLength="100"/>
+
+                    <!-- Last Name Field -->
+                    <TextBlock Text="Last Name *"/>
+                    <TextBox x:Name="txtLastName"
+                             MaxLength="100"/>
+
+                    <!-- Action Buttons -->
+                    <StackPanel Orientation="Horizontal" 
+                                HorizontalAlignment="Center"
+                                Margin="0,15,0,0">
+
+                        <Button x:Name="btnSave"
+                                Content="💾 Save Author"
+                                Click="BtnSave_Click"
+                                Background="#4CAF50"
+                                Foreground="White"
+                                Width="120"/>
+
+                        <Button x:Name="btnClear"
+                                Content="🔄 Clear Form"
+                                Click="BtnClear_Click"
+                                Background="#FF9800"
+                                Foreground="White"
+                                Width="120"/>
+                    </StackPanel>
+
+                    <!-- Info text -->
+                    <TextBlock Text="* Required fields"
+                               FontSize="10"
+                               FontStyle="Italic"
+                               Foreground="Gray"
+                               HorizontalAlignment="Center"
+                               Margin="0,10,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Books by Author Display Section -->
+            <!-- 
+            This section demonstrates querying the many-to-many relationship
+            from the Author side - showing which books this author has written
+            This is READ-ONLY display using a JOIN query
+            -->
+            <Border Grid.Row="2" 
+                    Background="White" 
+                    Padding="10"
+                    BorderBrush="#DDDDDD"
+                    BorderThickness="1">
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Section Header -->
+                    <TextBlock Grid.Row="0"
+                               Text="Books by Selected Author"
+                               FontSize="14"
+                               FontWeight="Bold"
+                               Margin="5,5,5,10"/>
+
+                    <!-- 
+                    ListBox to display books by this author
+                    This is populated from a JOIN query between Books and BookAuthors
+                    -->
+                    <ListBox Grid.Row="1"
+                             x:Name="lstAuthorBooks"
+                             Margin="5"
+                             MinHeight="100">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <!-- 
+                                Display book title and year
+                                Demonstrates binding to multiple properties in a template
+                                -->
+                                <StackPanel Margin="2">
+                                    <TextBlock Text="{Binding Title}" 
+                                               FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding YearPublished, StringFormat='Published: {0}'}" 
+                                               FontSize="10"
+                                               Foreground="Gray"/>
+                                    <!-- 
+                                    StringFormat: Formats the binding value
+                                    {0} is replaced with the YearPublished value
+                                    -->
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <!-- 
+                    Note TextBlock - shown when no author is selected
+                    -->
+                    <TextBlock Grid.Row="0" Grid.RowSpan="2"
+                               x:Name="txtNoAuthorSelected"
+                               Text="Select an author from the list to see their books"
+                               TextWrapping="Wrap"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Center"
+                               Foreground="Gray"
+                               FontStyle="Italic"
+                               Margin="20"/>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>
