@@ -64,7 +64,7 @@ Keep a **references log** throughout your project. Record:
 | **Books** | Author, title, pages | Troelsen, A. "Pro C# 9", pp. 245-260 |
 | **Stack Overflow** | Question URL, date | https://stackoverflow.com/questions/12345, accessed 20/01/2024 |
 | **YouTube videos** | Title, channel, URL | "C# SQLite Tutorial", CodeAcademy channel |
-| **AI assistants** | Tool used, what it helped with | "Used ChatGPT to help debug connection string error" |
+| **AI assistants** | Tool used, prompt used, and response. | "Used ChatGPT to help debug connection string error" **Include ScreenShots of prompt and response** |
 
 #### Code You Write Yourself (Gets Full Credit)
 
